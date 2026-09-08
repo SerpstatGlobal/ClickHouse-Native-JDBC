@@ -1,111 +1,114 @@
-ClickHouse Native JDBC
+ClickHouse Native JDBC — Serpstat fork
 ===
 
-> **Serpstat fork.** This is `com.serpstat:clickhouse-native-jdbc(-shaded):2.7.1-serpstat.1`,
-> a drop-in replacement for upstream 2.7.1 that fixes the CityHash128 checksum defect
-> ("Checksum doesn't match: corrupted data" on INSERT) and upgrades aircompressor to 0.27.
-> See [SERPSTAT-FORK.md](SERPSTAT-FORK.md) for the full story. The rest of this README is upstream's.
+[![build](https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC/actions/workflows/build.yml/badge.svg?branch=serpstat%2F2.7.1)](https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC/actions/workflows/build.yml)
+[![publish](https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC/actions/workflows/publish.yml/badge.svg)](https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC/actions/workflows/publish.yml)
+[![License](https://img.shields.io/github/license/SerpstatGlobal/ClickHouse-Native-JDBC)](LICENSE)
 
-[![Build Status](https://github.com/housepower/ClickHouse-Native-JDBC/workflows/build/badge.svg?branch=master)](https://github.com/housepower/ClickHouse-Native-JDBC/actions?query=workflow%3Abuild+branch%3Amaster)
-[![codecov.io](https://codecov.io/github/housepower/ClickHouse-Native-JDBC/coverage.svg?branch=master)](https://codecov.io/github/housepower/ClickHouse-Native-JDBC?branch=master)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.housepower/clickhouse-native-jdbc-parent/badge.svg)](https://search.maven.org/search?q=com.github.housepower)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/housepower/ClickHouse-Native-JDBC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/housepower/ClickHouse-Native-JDBC/alerts/)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/housepower/ClickHouse-Native-JDBC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/housepower/ClickHouse-Native-JDBC/context:java)
-[![License](https://img.shields.io/github/license/housepower/ClickHouse-Native-JDBC)](https://github.com/housepower/ClickHouse-Native-JDBC/blob/master/LICENSE)
+English | [Українська](README_uk.md)
 
-English | [简体中文](README_zh.md)
+A maintained fork of [housepower/ClickHouse-Native-JDBC](https://github.com/housepower/ClickHouse-Native-JDBC)
+2.7.1 — a JDBC driver for [ClickHouse](https://clickhouse.com/) that speaks the native TCP
+protocol and compresses data by columns.
 
-## [Home Page](https://housepower.github.io/ClickHouse-Native-JDBC/) | [GitHub](https://github.com/housepower/ClickHouse-Native-JDBC) | [Gitee](https://gitee.com/housepower/ClickHouse-Native-JDBC)
+## Why this fork exists
 
-A Native JDBC library for accessing [ClickHouse](https://clickhouse.yandex/) in Java, also provide a library for 
-integrating with [Apache Spark](https://github.com/apache/spark/).
+Upstream 2.7.1 computes a wrong checksum for some compressed blocks. ClickHouse then rejects
+the whole INSERT:
 
-## CONTRIBUTE
-
-We welcome anyone that wants to help out in any way, whether that includes reporting problems, helping with documentations, or contributing code changes to fix bugs, add tests, or implement new features. Please follow [Contributing Guide](CONTRIBUTE.md).
-
-Supported by [JetBrains Open Source License](https://www.jetbrains.com/?from=ClickHouse-Native-JDBC) 2020-2021. 
-
-## JDBC Driver
-
-### Requirements
-
-- Java 8/11. 
-
-**Notes:** We only do test with Java LTS versions.
-
-### Differences from [yandex/clickhouse-jdbc](https://github.com/yandex/clickhouse-jdbc)
-
-* Data is organized and compressed by columns.
-* Implemented in the TCP Protocol, with higher performance than HTTP, here is the [benchmark report](docs/dev/benchmark.md).
-
-### Limitations
-
-* Not support insert complex values expression, like `INSERT INTO test_table VALUES(toDate(123456))`, but query is ok.
-* Not support insert non-values format, like `TSV`.
-* Not support more compression method, like `ZSTD`.
-
-### Import
-
-- Gradle
-```groovy
-// (recommended) shaded version, available since 2.3-stable
-compile "com.github.housepower:clickhouse-native-jdbc-shaded:${clickhouse_native_jdbc_version}"
-
-// normal version
-compile "com.github.housepower:clickhouse-native-jdbc:${clickhouse_native_jdbc_version}"
+```
+DB::Exception: Checksum doesn't match: corrupted data. ... Size of compressed block: 18.
 ```
 
-- Maven
+The Java port of CityHash128 in the driver sign-extends bytes in its 1..3-byte tail branch,
+which is reached exactly when a compressed frame is 17..19 bytes long — the forced flush of a
+7..9-byte remainder of a `Data` packet. It happens on roughly 3 of every 1 048 576 INSERTs
+larger than 1 MB, looks like random corruption, and has been unanswered upstream since 2025.
+This fork fixes it, upgrades `aircompressor` to 0.27 (CVE-2024-36114), and changes nothing
+else. The full analysis, proofs and test recipe are in [SERPSTAT-FORK.md](SERPSTAT-FORK.md).
+
+If you run housepower 2.7.x against ClickHouse and have ever seen that error, this is why.
+
+## Requirements
+
+- Java 8 or later at runtime (bytecode target 1.8); the fork is built and tested with Java 17.
+- ClickHouse server 21.1 or later; the suite runs against 21.1.9.41 in CI.
+
+## Import
+
+Artifacts are published to GitHub Packages. Add the repository to your `pom.xml` or
+`settings.xml` (GitHub requires a token with `read:packages` even for public packages):
 
 ```xml
-<!-- (recommended) shaded version, available since 2.3-stable -->
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/SerpstatGlobal/ClickHouse-Native-JDBC</url>
+    </repository>
+</repositories>
+```
+
+Maven:
+
+```xml
+<!-- (recommended) shaded version: dependencies relocated, nothing leaks into your classpath -->
 <dependency>
-    <groupId>com.github.housepower</groupId>
+    <groupId>com.serpstat</groupId>
     <artifactId>clickhouse-native-jdbc-shaded</artifactId>
-    <version>${clickhouse-native-jdbc.version}</version>
+    <version>2.7.1-serpstat.1</version>
 </dependency>
 
-<!-- normal version -->
+<!-- plain version -->
 <dependency>
-    <groupId>com.github.housepower</groupId>
+    <groupId>com.serpstat</groupId>
     <artifactId>clickhouse-native-jdbc</artifactId>
-    <version>${clickhouse-native-jdbc.version}</version>
+    <version>2.7.1-serpstat.1</version>
 </dependency>
 ```
 
-## Integration with Spark
-
-### Requirements
-
-- Java 8, Scala 2.11/2.12, Spark 2.4
-- Or Java 8/11, Scala 2.12, Spark 3.0/3.1
-
-For Spark 3.2, [Spark ClickHouse Connector](https://github.com/housepower/spark-clickhouse-connector) is recommended.
-
-**Notes:** Spark 2.3.x(EOL) should also work fine. Actually we do test on both Java 8 and Java 11, 
-but Spark official support on Java 11 since 3.0.0.
-
-### Import
-
-- Gradle
+Gradle:
 
 ```groovy
-// available since 2.4.0
-compile "com.github.housepower:clickhouse-integration-spark_2.11:${clickhouse_native_jdbc_version}"
+implementation "com.serpstat:clickhouse-native-jdbc-shaded:2.7.1-serpstat.1"
 ```
 
-- Maven
+The fork is a drop-in replacement: Java packages (`com.github.housepower.*`), the driver class
+(`com.github.housepower.jdbc.ClickHouseDriver`) and the URL scheme (`jdbc:clickhouse://host:9000`)
+are unchanged. Only the Maven coordinates differ, so the two builds cannot be confused.
 
-```xml
-<!-- available since 2.4.0 -->
-<dependency>
-    <groupId>com.github.housepower</groupId>
-    <artifactId>clickhouse-integration-spark_2.11</artifactId>
-    <version>${clickhouse-native-jdbc.version}</version>
-</dependency>
+## Differences from the official [clickhouse-java](https://github.com/ClickHouse/clickhouse-java)
+
+* Native TCP protocol instead of HTTP, data organized and compressed by columns
+  ([benchmark report](docs/dev/benchmark.md)).
+* Works with old servers (21.x) that the official driver no longer supports.
+
+## Limitations (inherited from upstream)
+
+* No expressions in inserted values (`INSERT INTO t VALUES (toDate(123456))`); queries are fine.
+* No non-VALUES insert formats such as `TSV`.
+* No compression methods besides LZ4 (`ZSTD` is not supported).
+
+## Spark integration
+
+The `clickhouse-integration-spark` module is kept in the tree untouched but is **not** built or
+published by this fork. For Spark use upstream's artifacts or
+[Spark ClickHouse Connector](https://github.com/housepower/spark-clickhouse-connector).
+
+## Building
+
+```bash
+mvn -pl clickhouse-native-jdbc,clickhouse-native-jdbc-shaded -am install -DskipITs
+# integration tests (Docker) against the ClickHouse version we run in production
+mvn -pl clickhouse-native-jdbc verify -DCLICKHOUSE_IMAGE=yandex/clickhouse-server:21.1.9.41
 ```
+
+## Contributing
+
+Issues and pull requests are welcome, especially reports from other users hit by the checksum
+defect. Keep changes minimal and covered by tests; the CityHash port is pinned against the C++
+reference implementation from the ClickHouse repository (see `ClickHouseCityHashTest`).
 
 ## License
 
-This project is distributed under the terms of the Apache License (Version 2.0). See [LICENSE](LICENSE) for details.
+Apache License, Version 2.0, unchanged from upstream. See [LICENSE](LICENSE) and
+[NOTICE](NOTICE). Modified files carry a `Modified by Serpstat` notice in their header.
