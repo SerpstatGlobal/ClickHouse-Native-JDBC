@@ -113,7 +113,7 @@ Tagging `v2.7.1-serpstat.<n>` on the `serpstat/2.7.1` branch runs
 ```xml
 <repository>
     <id>github</id>
-    <url>https://maven.pkg.github.com/serpstat/ClickHouse-Native-JDBC</url>
+    <url>https://maven.pkg.github.com/SerpstatGlobal/ClickHouse-Native-JDBC</url>
 </repository>
 ```
 

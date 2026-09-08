@@ -70,7 +70,7 @@
     <properties>
         <!-- Serpstat fork: artifacts go to the GitHub Packages Maven registry of the fork
              repository, not to Maven Central. Override github.repository if the fork moves. -->
-        <github.repository>serpstat/ClickHouse-Native-JDBC</github.repository>
+        <github.repository>SerpstatGlobal/ClickHouse-Native-JDBC</github.repository>
         <deploy.repo.snapshots.id>github</deploy.repo.snapshots.id>
         <deploy.repo.snapshots.url>https://maven.pkg.github.com/${github.repository}</deploy.repo.snapshots.url>
         <deploy.repo.release.id>github</deploy.repo.release.id>
