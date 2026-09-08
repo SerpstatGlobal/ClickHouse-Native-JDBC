@@ -18,7 +18,8 @@ import com.github.housepower.log.Logger;
 import com.github.housepower.log.LoggerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.ClickHouseContainer;
+import org.testcontainers.clickhouse.ClickHouseContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.sql.Connection;
@@ -37,7 +38,9 @@ public class FailoverClickhouseConnectionITest extends AbstractITest {
     protected static int HA_PORT;
 
     @Container
-    public static ClickHouseContainer containerHA = (ClickHouseContainer) new ClickHouseContainer(CLICKHOUSE_IMAGE)
+    public static ClickHouseContainer containerHA = (ClickHouseContainer) new ClickHouseContainer(DockerImageName.parse(CLICKHOUSE_IMAGE).asCompatibleSubstituteFor("clickhouse/clickhouse-server"))
+            .withUsername(CLICKHOUSE_USER)
+            .withPassword(CLICKHOUSE_PASSWORD)
             .withEnv("CLICKHOUSE_USER", CLICKHOUSE_USER)
             .withEnv("CLICKHOUSE_PASSWORD", CLICKHOUSE_PASSWORD)
             .withEnv("CLICKHOUSE_DB", CLICKHOUSE_DB);
@@ -49,9 +52,9 @@ public class FailoverClickhouseConnectionITest extends AbstractITest {
         container.start();
         containerHA.start();
 
-        CK_PORT = container.getMappedPort(ClickHouseContainer.NATIVE_PORT);
+        CK_PORT = container.getMappedPort(CLICKHOUSE_NATIVE_PORT);
         HA_HOST = containerHA.getHost();
-        HA_PORT = containerHA.getMappedPort(ClickHouseContainer.NATIVE_PORT);
+        HA_PORT = containerHA.getMappedPort(CLICKHOUSE_NATIVE_PORT);
         LOG.info("Port1 {}, Port2 {}", CK_PORT, HA_PORT);
     }
 

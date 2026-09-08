@@ -13,6 +13,9 @@
  *
  * Copyright 2017 YANDEX LLC
  * Copyright (C) 2012 tamtam180
+ *
+ * Modified by Serpstat (2026) for the com.serpstat fork, see SERPSTAT-FORK.md:
+ * hashLen0to16() treats the 1..3-byte tail as unsigned, matching the C++ reference.
  */
 
 package com.github.housepower.misc;
@@ -94,11 +97,18 @@ public class ClickHouseCityHash {
             return hashLen16((a << 3) + len, fetch32(s, pos + len - 4));
         }
         if (len > 0) {
-            byte a = s[pos];
-            byte b = s[pos + (len >>> 1)];
-            byte c = s[pos + len - 1];
-            int y = (int) a + (((int) b) << 8);
-            int z = len + (((int) c) << 2);
+            // The reference implementation (cityhash102, ClickHouse) reads these as uint8 and
+            // computes y and z as uint32. Java bytes are signed, so without the masks any byte
+            // >= 0x80 in these three positions sign-extends into y/z and the whole 128-bit hash
+            // diverges from what the server computes. This branch is reached for compressed
+            // blocks of 17..19 bytes (16 bytes go into the seed), i.e. the small forced-flush
+            // tail of a Data packet; the server then rejects the block with
+            // "Checksum doesn't match: corrupted data".
+            int a = s[pos] & 0xFF;
+            int b = s[pos + (len >>> 1)] & 0xFF;
+            int c = s[pos + len - 1] & 0xFF;
+            long y = (a + (b << 8)) & 0xFFFFFFFFL;
+            long z = (len + (c << 2)) & 0xFFFFFFFFL;
             return shiftMix(y * k2 ^ z * k3) * k2;
         }
         return k2;

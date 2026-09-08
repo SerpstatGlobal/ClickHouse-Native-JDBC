@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import javax.sql.DataSource;
@@ -47,7 +48,9 @@ public abstract class AbstractITest implements Serializable {
     protected static final int CLICKHOUSE_NATIVE_SECURE_PORT = 9440;
 
     @Container
-    public static ClickHouseContainer container = new ClickHouseContainer(CLICKHOUSE_IMAGE)
+    public static ClickHouseContainer container = new ClickHouseContainer(DockerImageName.parse(CLICKHOUSE_IMAGE).asCompatibleSubstituteFor("clickhouse/clickhouse-server"))
+            .withUsername(CLICKHOUSE_USER)
+            .withPassword(CLICKHOUSE_PASSWORD)
             .withEnv("CLICKHOUSE_USER", CLICKHOUSE_USER)
             .withEnv("CLICKHOUSE_PASSWORD", CLICKHOUSE_PASSWORD)
             .withEnv("CLICKHOUSE_DB", CLICKHOUSE_DB)

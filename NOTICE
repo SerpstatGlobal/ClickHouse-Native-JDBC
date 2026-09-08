@@ -1,0 +1,14 @@
+ClickHouse Native JDBC — Serpstat fork
+Copyright 2026 Serpstat
+
+This product is a modified version of ClickHouse-Native-JDBC
+(https://github.com/housepower/ClickHouse-Native-JDBC), release 2.7.1,
+Copyright 2017 YANDEX LLC and the ClickHouse-Native-JDBC contributors,
+licensed under the Apache License, Version 2.0.
+
+The CityHash implementation in com.github.housepower.misc.ClickHouseCityHash
+is derived from work Copyright (C) 2012 tamtam180.
+
+Modifications made by Serpstat are listed in SERPSTAT-FORK.md; each modified
+source file carries a "Modified by Serpstat" notice in its header, as required
+by Section 4(b) of the License. The original LICENSE file is retained unchanged.

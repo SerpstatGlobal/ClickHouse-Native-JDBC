@@ -1,6 +1,11 @@
 ClickHouse Native JDBC
 ===
 
+> **Serpstat fork.** This is `com.serpstat:clickhouse-native-jdbc(-shaded):2.7.1-serpstat.1`,
+> a drop-in replacement for upstream 2.7.1 that fixes the CityHash128 checksum defect
+> ("Checksum doesn't match: corrupted data" on INSERT) and upgrades aircompressor to 0.27.
+> See [SERPSTAT-FORK.md](SERPSTAT-FORK.md) for the full story. The rest of this README is upstream's.
+
 [![Build Status](https://github.com/housepower/ClickHouse-Native-JDBC/workflows/build/badge.svg?branch=master)](https://github.com/housepower/ClickHouse-Native-JDBC/actions?query=workflow%3Abuild+branch%3Amaster)
 [![codecov.io](https://codecov.io/github/housepower/ClickHouse-Native-JDBC/coverage.svg?branch=master)](https://codecov.io/github/housepower/ClickHouse-Native-JDBC?branch=master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.housepower/clickhouse-native-jdbc-parent/badge.svg)](https://search.maven.org/search?q=com.github.housepower)

@@ -18,9 +18,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.github.housepower</groupId>
+        <groupId>com.serpstat</groupId>
         <artifactId>clickhouse-native-jdbc-parent</artifactId>
-        <version>2.7.1</version>
+        <version>2.7.1-serpstat.1</version>
     </parent>
 
     <artifactId>clickhouse-native-jdbc-shaded</artifactId>
@@ -35,7 +35,7 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.github.housepower</groupId>
+            <groupId>com.serpstat</groupId>
             <artifactId>clickhouse-native-jdbc</artifactId>
         </dependency>
     </dependencies>

@@ -10,6 +10,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modified by Serpstat (2026) for the com.serpstat fork, see SERPSTAT-FORK.md:
+ * flushToTarget() passes the real remaining output length to the LZ4 compressor.
  */
 
 package com.github.housepower.buffer;
@@ -71,7 +74,11 @@ public class CompressedBuffedWriter implements BuffedWriter, BytesHelper {
             int maxLen = lz4Compressor.maxCompressedLength(position);
 
             byte[] compressedBuffer = new byte[maxLen + COMPRESSION_HEADER_LENGTH + CHECKSUM_LENGTH];
-            int res = lz4Compressor.compress(writtenBuf, 0, position, compressedBuffer, COMPRESSION_HEADER_LENGTH + CHECKSUM_LENGTH, compressedBuffer.length);
+            // maxOutputLength is the space left after the offset, not the whole array: the
+            // previous value overstated it by 25 bytes, which aircompressor >= 0.27 rejects
+            // with IllegalArgumentException in verifyRange().
+            int outputOffset = COMPRESSION_HEADER_LENGTH + CHECKSUM_LENGTH;
+            int res = lz4Compressor.compress(writtenBuf, 0, position, compressedBuffer, outputOffset, compressedBuffer.length - outputOffset);
 
             compressedBuffer[CHECKSUM_LENGTH] = (byte) (0x82 & 0xFF);
             int compressedSize = res + COMPRESSION_HEADER_LENGTH;

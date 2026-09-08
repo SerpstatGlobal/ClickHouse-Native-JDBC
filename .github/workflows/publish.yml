@@ -1,0 +1,36 @@
+name: publish
+
+# Serpstat fork: build the driver on a version tag and publish it to the GitHub
+# Packages Maven registry of this repository. Only the two driver modules are
+# released; the Spark integration and the examples stay in the tree untouched.
+on:
+  push:
+    tags:
+      - "v*-serpstat.*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - name: Unit tests, build and deploy
+        run: >
+          mvn -B -pl clickhouse-native-jdbc,clickhouse-native-jdbc-shaded -am
+          -DskipITs -Dgpg.skip
+          deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Integration tests against the ClickHouse version we run
+        run: >
+          mvn -B -pl clickhouse-native-jdbc verify
+          -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false
+          -DCLICKHOUSE_IMAGE=yandex/clickhouse-server:21.1.9.41
