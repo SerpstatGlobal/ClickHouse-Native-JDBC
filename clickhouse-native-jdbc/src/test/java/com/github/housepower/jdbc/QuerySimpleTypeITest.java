@@ -146,6 +146,7 @@ public class QuerySimpleTypeITest extends AbstractITest {
     @Test
     public void successfullyDate32Column() throws Exception {
         withNewConnection(connect -> {
+            assumeServerAtLeast(connect, 21, 9); // Date32 appeared in 21.9
             Statement statement = connect.createStatement();
             ResultSet rs = statement.executeQuery("SELECT toDate32('1955-01-01') AS value, toTypeName(value)");
 
@@ -202,6 +203,7 @@ public class QuerySimpleTypeITest extends AbstractITest {
     @Test
     public void successfullyMetadata() throws Exception {
         withStatement(statement -> {
+            assumeServerAtLeast(statement.getConnection(), 21, 9); // Date32 appeared in 21.9
             ResultSet rs = statement.executeQuery(
                     "SELECT number as a1, toString(number) as a2, now() as a3, today() as a4, toDate32(today()) as a5 from numbers(1)");
 

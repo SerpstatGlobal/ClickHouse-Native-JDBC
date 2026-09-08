@@ -54,7 +54,7 @@ corruption and frequent enough to hit a busy writer several times a week.
 | `buffer/CompressedBuffedWriter.java` | `flushToTarget()` passes the real remaining output length (`compressedBuffer.length - offset`) to the LZ4 compressor. The previous value overstated it by 25 bytes; harmless with aircompressor 0.21 (the compressor never exceeds `maxCompressedLength`), rejected with `IllegalArgumentException` by aircompressor ≥ 0.27. This is upstream issue #469. |
 | `pom.xml` | `io.airlift:aircompressor` 0.21 → **0.27** (fixes CVE-2024-36114, out-of-bounds read/write in the pure-Java decompressors). Group id `com.serpstat`, version `2.7.1-serpstat.1`. `distributionManagement` points at GitHub Packages. |
 | `pom.xml` (test scope only) | `jacoco-maven-plugin` 0.8.2 → 0.8.15 (0.8.2 aborts the test JVM on Java 17); `testcontainers` 1.19.0 → 1.21.4: 1.19.0 speaks Docker API 1.32, which Docker ≥ 26 refuses (`client version 1.32 is too old`), so no test that needs a container could run. |
-| `jdbc/AbstractITest.java`, `jdbc/FailoverClickhouseConnectionITest.java` (tests) | Containers get explicit `withUsername`/`withPassword` (testcontainers ≥ 1.20 defaults to `test`/`test`, the mounted `users.xml` knows `default`), the image name may be any `clickhouse-server` build (`asCompatibleSubstituteFor`), and the failover test uses the current `org.testcontainers.clickhouse.ClickHouseContainer` like the base class does. |
+| `jdbc/AbstractITest.java`, `jdbc/FailoverClickhouseConnectionITest.java` (tests) | Containers get explicit `withUsername`/`withPassword` (testcontainers ≥ 1.20 defaults to `test`/`test`, the mounted `users.xml` knows `default`), the image name may be any `clickhouse-server` build (`asCompatibleSubstituteFor`), the failover test uses the current `org.testcontainers.clickhouse.ClickHouseContainer` like the base class does, and `assumeServerAtLeast()` skips the two `Date32` tests on servers older than 21.9. |
 | `.github/workflows/` | Upstream's Java 8/11 × Scala × Spark matrix replaced by one job: Java 17, the two driver modules, integration tests against `yandex/clickhouse-server:21.1.9.41`; `publish.yml` deploys to GitHub Packages on a `v*-serpstat.*` tag. |
 
 No production code beyond the two files above was touched. The read path (`CompressedBuffedReader`) does not
@@ -96,11 +96,13 @@ mvn -pl clickhouse-native-jdbc -am verify -DCLICKHOUSE_IMAGE=yandex/clickhouse-s
 The Spark integration module and the examples are kept in the tree untouched
 but are not part of the release build.
 
-Known failures when running the upstream integration suite against 21.1.9.41
-that are the server's age, not the driver's: `QuerySimpleTypeITest`
-(`toDate32` does not exist before 21.9) and
-`PreparedStatementITest.successfullyDateIndependentWithTz`. Both pass against
-upstream's default image `clickhouse/clickhouse-server:21.9`.
+Two upstream tests need `toDate32`, which appeared in ClickHouse 21.9; they are
+skipped (JUnit assumption via `AbstractITest.assumeServerAtLeast`) when the
+server is older, so the suite is green against 21.1.9.41 in CI.
+`PreparedStatementITest.successfullyDateIndependentWithTz` depends on the
+client time zone: it passes on a UTC machine (CI) and fails on a laptop in
+another zone against 21.1; against upstream's default image 21.9 it passes
+everywhere. Not touched.
 
 ## Publishing
 

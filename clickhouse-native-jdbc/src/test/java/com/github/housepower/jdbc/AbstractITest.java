@@ -16,6 +16,7 @@ package com.github.housepower.jdbc;
 
 import com.github.housepower.misc.StrUtil;
 import com.github.housepower.misc.SystemUtil;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -29,7 +30,10 @@ import java.sql.*;
 import java.time.ZoneId;
 import java.util.Enumeration;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @Testcontainers
+
 public abstract class AbstractITest implements Serializable {
 
     protected static final ZoneId CLIENT_TZ = ZoneId.systemDefault();
@@ -117,6 +121,24 @@ public abstract class AbstractITest implements Serializable {
         }
 
         return mainStringBuilder.toString();
+    }
+
+    /**
+     * Skips the calling test when the server is older than {@code major.minor}.
+     * The fork runs the suite against the ClickHouse version deployed in
+     * production (21.1), where some functions used by upstream tests do not exist.
+     */
+    protected static void assumeServerAtLeast(Connection connection, int major, int minor) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery("SELECT version()")) {
+            assertTrue(rs.next());
+            String[] parts = rs.getString(1).split("\\.");
+            int serverMajor = Integer.parseInt(parts[0]);
+            int serverMinor = Integer.parseInt(parts[1]);
+            boolean recentEnough = serverMajor > major || (serverMajor == major && serverMinor >= minor);
+            Assumptions.assumeTrue(recentEnough,
+                    "requires ClickHouse >= " + major + "." + minor + ", server is " + rs.getString(1));
+        }
     }
 
     // this method should be synchronized
