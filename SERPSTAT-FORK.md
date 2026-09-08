@@ -55,6 +55,8 @@ corruption and frequent enough to hit a busy writer several times a week.
 | `pom.xml` | `io.airlift:aircompressor` 0.21 → **0.27** (fixes CVE-2024-36114, out-of-bounds read/write in the pure-Java decompressors). Group id `com.serpstat`, version `2.7.1-serpstat.1`. `distributionManagement` points at GitHub Packages. |
 | `pom.xml` (test scope only) | `jacoco-maven-plugin` 0.8.2 → 0.8.15 (0.8.2 aborts the test JVM on Java 17); `testcontainers` 1.19.0 → 1.21.4: 1.19.0 speaks Docker API 1.32, which Docker ≥ 26 refuses (`client version 1.32 is too old`), so no test that needs a container could run. |
 | `jdbc/AbstractITest.java`, `jdbc/FailoverClickhouseConnectionITest.java` (tests) | Containers get explicit `withUsername`/`withPassword` (testcontainers ≥ 1.20 defaults to `test`/`test`, the mounted `users.xml` knows `default`), the image name may be any `clickhouse-server` build (`asCompatibleSubstituteFor`), the failover test uses the current `org.testcontainers.clickhouse.ClickHouseContainer` like the base class does, and `assumeServerAtLeast()` skips the two `Date32` tests on servers older than 21.9. |
+| `pom.xml` (metadata) | `url`/`scm`/`description` point at this fork, Serpstat added to `developers` (upstream authors kept); `maven-javadoc-plugin` 3.1.1 → 3.12.0 with `doclint=none`, so the `release` profile (sources + javadoc jars, required by Maven Central) builds on Java 17. |
+| `jdbc/SyntheticInsertSweepITest.java` (tests) | Soak of the compressed write and read paths: every last-frame size in a window around 1 MB and 2 MB with and without high-bit bytes, then 40 random batches of nine column types read back row by row against a seeded generator. |
 | `.github/workflows/` | Upstream's Java 8/11 × Scala × Spark matrix replaced by one job: Java 17, the two driver modules, integration tests against `yandex/clickhouse-server:21.1.9.41`; `publish.yml` deploys to GitHub Packages on a `v*-serpstat.*` tag. |
 
 No production code beyond the two files above was touched. The read path (`CompressedBuffedReader`) does not
@@ -73,6 +75,9 @@ only on INSERT.
   writer produces for 7/8/9-byte remainders against the reference values, and
   round-trips a full 1 MB incompressible buffer (the case that trips
   aircompressor 0.27 with the old argument).
+* `SyntheticInsertSweepITest` (testcontainers) sweeps every tail-frame size
+  around 1 MB and 2 MB and round-trips 40 random mixed-type batches (about
+  120 000 rows) through the compressed writer and reader.
 * `CompressedTailFrameITest` (testcontainers) inserts one String row of every
   length in a window around 1 MB, with and without high-bit tail bytes; before
   the fix lengths `1 MB - 15/-14/-13` fail on the server with

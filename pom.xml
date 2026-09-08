@@ -23,13 +23,13 @@
     <packaging>pom</packaging>
 
     <name>ClickHouse Native JDBC POM</name>
-    <description>ClickHouse Native Protocol JDBC implementation</description>
-    <url>https://github.com/housepower/ClickHouse-Native-JDBC</url>
+    <description>ClickHouse Native Protocol JDBC implementation — Serpstat fork of housepower/ClickHouse-Native-JDBC 2.7.1 with the CityHash128 checksum fix</description>
+    <url>https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC</url>
 
     <scm>
-        <url>https://github.com/housepower/ClickHouse-Native-JDBC</url>
-        <connection>scm:git:git@github.com:housepower/ClickHouse-Native-JDBC.git</connection>
-        <developerConnection>scm:git:git@github.com:housepower/ClickHouse-Native-JDBC.git</developerConnection>
+        <url>https://github.com/SerpstatGlobal/ClickHouse-Native-JDBC</url>
+        <connection>scm:git:git@github.com:SerpstatGlobal/ClickHouse-Native-JDBC.git</connection>
+        <developerConnection>scm:git:git@github.com:SerpstatGlobal/ClickHouse-Native-JDBC.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
     <licenses>
@@ -40,6 +40,16 @@
         </license>
     </licenses>
     <developers>
+        <developer>
+            <id>SerpstatGlobal</id>
+            <name>Serpstat</name>
+            <organization>Serpstat</organization>
+            <organizationUrl>https://serpstat.com</organizationUrl>
+            <roles>
+                <role>fork maintainer</role>
+            </roles>
+        </developer>
+        <!-- upstream authors -->
         <developer>
             <id>sundy-li</id>
             <name>Sundy Li</name>
@@ -93,7 +103,7 @@
         <maven.forbiddenapis.plugin.version>3.0.1</maven.forbiddenapis.plugin.version>
         <maven.gpg.plugin.version>1.5</maven.gpg.plugin.version>
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
-        <maven.javadoc.plugin.version>3.1.1</maven.javadoc.plugin.version>
+        <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.jacoco.plugin.version>0.8.15</maven.jacoco.plugin.version>
         <maven.os.plugin.version>1.7.0</maven.os.plugin.version>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
@@ -379,6 +389,12 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>${maven.javadoc.plugin.version}</version>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <detectJavaApiLink>false</detectJavaApiLink>
+                        <failOnWarnings>false</failOnWarnings>
+                        <quiet>true</quiet>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.jacoco</groupId>
