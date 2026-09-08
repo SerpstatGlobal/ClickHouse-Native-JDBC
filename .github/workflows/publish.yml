@@ -22,15 +22,15 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: maven
-      - name: Unit tests, build and deploy
+      # Tests first, deploy last: a red test must never leave a published artifact behind.
+      - name: Unit and integration tests against the ClickHouse version we run
+        run: >
+          mvn -B -pl clickhouse-native-jdbc,clickhouse-native-jdbc-shaded -am verify
+          -DCLICKHOUSE_IMAGE=yandex/clickhouse-server:21.1.9.41
+      - name: Deploy to GitHub Packages
         run: >
           mvn -B -pl clickhouse-native-jdbc,clickhouse-native-jdbc-shaded -am
-          -DskipITs -Dgpg.skip
+          -DskipTests -Dgpg.skip
           deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Integration tests against the ClickHouse version we run
-        run: >
-          mvn -B -pl clickhouse-native-jdbc verify
-          -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false
-          -DCLICKHOUSE_IMAGE=yandex/clickhouse-server:21.1.9.41
