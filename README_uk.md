@@ -37,8 +37,10 @@ Java-порт CityHash128 у драйвері розширює байти зі �
 
 ## Підключення
 
-Артефакти публікуються в GitHub Packages. Додайте репозиторій у `pom.xml` або `settings.xml`
-(GitHub вимагає токен з правом `read:packages` навіть для публічних пакетів):
+Артефакти публікуються в GitHub Packages; публікація в Maven Central налаштовується
+(namespace `com.serpstat`), після чого налаштування репозиторію не знадобиться. До того часу
+додайте репозиторій у `pom.xml` або `settings.xml` (GitHub вимагає токен з правом
+`read:packages` навіть для публічних пакетів):
 
 ```xml
 <repositories>

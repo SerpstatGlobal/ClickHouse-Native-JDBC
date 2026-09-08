@@ -101,7 +101,7 @@
         <maven.scala.plugin.version>4.3.0</maven.scala.plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.forbiddenapis.plugin.version>3.0.1</maven.forbiddenapis.plugin.version>
-        <maven.gpg.plugin.version>1.5</maven.gpg.plugin.version>
+        <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.jacoco.plugin.version>0.8.15</maven.jacoco.plugin.version>
@@ -616,6 +616,28 @@
             <properties>
                 <spark.version>3.1.1</spark.version>
             </properties>
+        </profile>
+        <!-- Maven Central via the Sonatype Central Portal. Only the two driver modules are
+             published; the Spark integration and the examples keep skipPublishing. Needs
+             server "central" in settings.xml (portal user token) and a GPG key. -->
+        <profile>
+            <id>central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <deploymentName>${project.groupId}:${project.version}</deploymentName>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>release</id>

@@ -1,8 +1,8 @@
 name: publish
 
-# Serpstat fork: build the driver on a version tag and publish it to the GitHub
-# Packages Maven registry of this repository. Only the two driver modules are
-# released; the Spark integration and the examples stay in the tree untouched.
+# Serpstat fork: on a version tag run the whole suite, then publish the two driver
+# modules to GitHub Packages and, when the Central credentials are configured, to
+# Maven Central through the Sonatype Central Portal.
 on:
   push:
     tags:
@@ -14,9 +14,12 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      # secrets are not readable in step conditions, so the switch lives in env
+      HAS_CENTRAL: ${{ secrets.CENTRAL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
+      - name: Set up JDK 17 (GitHub Packages server id "github")
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -34,3 +37,28 @@ jobs:
           deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Maven Central. Requires repository secrets CENTRAL_USERNAME / CENTRAL_TOKEN
+      # (portal user token), GPG_PRIVATE_KEY (armored) and GPG_PASSPHRASE.
+      - name: Set up JDK 17 for Central (server id "central", GPG key)
+        if: env.HAS_CENTRAL == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+      - name: Deploy to Maven Central
+        if: env.HAS_CENTRAL == 'true'
+        run: >
+          mvn -B -pl clickhouse-native-jdbc,clickhouse-native-jdbc-shaded -am
+          -DskipTests -Prelease,central
+          deploy
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

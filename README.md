@@ -36,8 +36,10 @@ If you run housepower 2.7.x against ClickHouse and have ever seen that error, th
 
 ## Import
 
-Artifacts are published to GitHub Packages. Add the repository to your `pom.xml` or
-`settings.xml` (GitHub requires a token with `read:packages` even for public packages):
+Artifacts are published to GitHub Packages; publication to Maven Central is being set up
+(`com.serpstat` namespace), after which no repository configuration will be needed. Until then
+add the repository to your `pom.xml` or `settings.xml` (GitHub requires a token with
+`read:packages` even for public packages):
 
 ```xml
 <repositories>

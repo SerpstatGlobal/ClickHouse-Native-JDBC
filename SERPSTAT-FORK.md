@@ -127,6 +127,17 @@ Tagging `v2.7.1-serpstat.<n>` on the `serpstat/2.7.1` branch runs
 Version scheme: `<upstream version>-serpstat.<n>`. Maven orders an unknown
 qualifier after the plain release, so `2.7.1-serpstat.1 > 2.7.1`.
 
+### Maven Central
+
+The same tag also publishes to Maven Central through the Sonatype Central
+Portal (`-Prelease,central`: sources, javadoc, GPG signatures,
+`central-publishing-maven-plugin`) when the repository secrets
+`CENTRAL_USERNAME`, `CENTRAL_TOKEN` (portal user token), `GPG_PRIVATE_KEY`
+(armored) and `GPG_PASSPHRASE` are set; without them the step is skipped. The
+`com.serpstat` namespace must be verified in the portal first (DNS TXT record
+on `serpstat.com`). Central is immutable: a version can never be replaced, so
+the workflow runs the full test suite before either deploy.
+
 ## License
 
 Apache License 2.0, unchanged. The original `LICENSE` is retained, `NOTICE`
