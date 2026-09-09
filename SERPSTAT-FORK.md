@@ -23,6 +23,9 @@ drop-in replacement.
 
 ## Why
 
+The long version of this section, written as a story for developers, is
+[docs/STORY.md](docs/STORY.md).
+
 Production symptom (Serpstat crawler, ClickHouse 21.1, September 2026):
 
 ```

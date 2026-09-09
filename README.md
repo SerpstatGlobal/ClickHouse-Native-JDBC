@@ -28,6 +28,8 @@ This fork fixes it, upgrades `aircompressor` to 0.27 (CVE-2024-36114), and chang
 else. The full analysis, proofs and test recipe are in [SERPSTAT-FORK.md](SERPSTAT-FORK.md).
 
 If you run housepower 2.7.x against ClickHouse and have ever seen that error, this is why.
+The full investigation, including why the bug stayed invisible for years and why it depends on
+the calendar, is told in [docs/STORY.md](docs/STORY.md).
 
 ## Requirements
 
