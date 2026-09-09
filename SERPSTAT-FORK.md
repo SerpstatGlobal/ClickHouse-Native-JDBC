@@ -149,6 +149,9 @@ its header (Section 4(b) of the License).
 
 ## Upstream
 
-Reported to upstream as a pull request against `master`; if it is merged and a
-release ships, this fork becomes unnecessary and the `com.github.housepower`
-artifact can be used again.
+Reported to upstream as
+[housepower/ClickHouse-Native-JDBC#472](https://github.com/housepower/ClickHouse-Native-JDBC/pull/472)
+(the hash fix and the vector test only; the buffer bound and the aircompressor
+upgrade are left for a separate change). If it is merged and a release ships,
+this fork becomes unnecessary and the `com.github.housepower` artifact can be
+used again.
